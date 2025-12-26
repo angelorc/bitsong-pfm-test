@@ -23,21 +23,32 @@ delegate="100000000000$DENOM"
 
 $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID
 sleep 1
+
+jq ".app_state.crisis.constant_fee.denom = \"$DENOM\" |
+      .app_state.staking.params.bond_denom = \"$DENOM\" |
+      .app_state.merkledrop.params.creation_fee.denom = \"$DENOM\" |
+      .app_state.gov.deposit_params.min_deposit[0].denom = \"$DENOM\" |
+      .app_state.fantoken.params.burn_fee.denom = \"$DENOM\" |
+      .app_state.fantoken.params.issue_fee.denom = \"$DENOM\" |
+      .app_state.fantoken.params.mint_fee.denom = \"$DENOM\"" $CHAINDIR/$CHAINID/config/genesis.json > tmp.json
+
+mv tmp.json $CHAINDIR/$CHAINID/config/genesis.json
+
 $BINARY --home $CHAINDIR/$CHAINID keys add validator $KEYRING --output json > $CHAINDIR/$CHAINID/validator_seed.json 2>&1
 sleep 1
 $BINARY --home $CHAINDIR/$CHAINID keys add user $KEYRING --output json > $CHAINDIR/$CHAINID/key_seed.json 2>&1
 sleep 1
 $BINARY --home $CHAINDIR/$CHAINID keys add relayer $KEYRING --output json > $CHAINDIR/$CHAINID/relayer_seed.json 2>&1
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show user -a) $coins
+$BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show user -a) $coins
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show validator -a) $coins
+$BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show validator -a) $coins
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show relayer -a) $coins
+$BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show relayer -a) $coins
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID gentx validator $delegate $KEYRING --chain-id $CHAINID
+$BINARY --home $CHAINDIR/$CHAINID genesis gentx validator $delegate $KEYRING --chain-id $CHAINID
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID collect-gentxs
+$BINARY --home $CHAINDIR/$CHAINID genesis collect-gentxs
 sleep 1
 
 echo "Change settings in config.toml and genesis.json files..."
